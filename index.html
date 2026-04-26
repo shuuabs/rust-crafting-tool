@@ -19,21 +19,18 @@
 <body class="min-h-screen">
   <div class="max-w-7xl mx-auto p-6">
     <h1 class="text-4xl font-bold text-orange-500 mb-2">⚒️ Rust Tech Tree Tracker</h1>
-    <p class="text-zinc-400 mb-8">全アイテム搭載版</p>
+    <p class="text-zinc-400 mb-8">あなたのアイテム名そのまま・データ共有対応</p>
 
-    <!-- 共有機能 -->
     <div class="flex gap-3 mb-6 flex-wrap">
-      <button onclick="exportData()" class="bg-emerald-600 hover:bg-emerald-500 px-6 py-2 rounded-xl">📤 エクスポート</button>
-      <button onclick="importData()" class="bg-amber-600 hover:bg-amber-500 px-6 py-2 rounded-xl">📥 インポート</button>
-      <button onclick="copyShareLink()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-xl">🔗 共有リンクコピー</button>
+      <button onclick="copyShareLink()" class="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-xl font-medium">🔗 共有リンクをコピー</button>
     </div>
 
-    <!-- プレイヤー -->
+    <!-- プレイヤー管理 -->
     <div class="bg-zinc-900 rounded-2xl p-6 mb-8 border border-zinc-700">
       <h2 class="text-xl font-semibold mb-4">👥 プレイヤーリスト</h2>
       <div class="flex gap-3 mb-4">
-        <input id="newPlayer" class="flex-1 bg-zinc-800 border border-zinc-600 rounded-xl px-5 py-3 text-white placeholder:text-zinc-500" placeholder="名前を入力 (例: shuu)" type="text">
-        <button onclick="addPlayer()" class="bg-orange-600 hover:bg-orange-500 px-10 py-3 rounded-xl font-medium">追加</button>
+        <input id="newPlayer" class="flex-1 bg-zinc-800 border border-zinc-600 rounded-xl px-5 py-3 text-white" placeholder="名前を入力 (例: shuu)" type="text">
+        <button onclick="addPlayer()" class="bg-orange-600 hover:bg-orange-500 px-8 py-3 rounded-xl">追加</button>
       </div>
       <div id="playersContainer" class="flex flex-wrap gap-3"></div>
     </div>
@@ -53,18 +50,13 @@
     const workbenchesData = {
       1: [
         { name: "廃材のハンマー", slug: "hammer.salvaged", category: "Tools" },
-        { name: "Salvaged Axe", slug: "axe.salvaged", category: "Tools" },
-        { name: "Metal Chestplate", slug: "metal.chestplate", category: "Armor" },
-        { name: "Bucket", slug: "bucket.water", category: "Other" },
+        { name: "バケツ", slug: "bucket.water", category: "Other" },
         { name: "鉄の斧", slug: "hatchet", category: "Tools" },
-        { name: "Salvaged Icepick", slug: "icepick.salvaged", category: "Tools" },
-        { name: "Crossbow", slug: "crossbow", category: "Weapons" },
         { name: "リボルバー", slug: "pistol.revolver", category: "Weapons" },
         { name: "ネイルガン", slug: "pistol.nailgun", category: "Weapons" },
         { name: "ハンドメイドSMG", slug: "smg.2", category: "Weapons" },
         { name: "水道管のショットガン", slug: "shotgun.waterpipe", category: "Weapons" },
         { name: "ダブルバレルショットガン", slug: "shotgun.doublebarrel", category: "Weapons" },
-        { name: "Compound Bow", slug: "bow.compound", category: "Weapons" },
         { name: "ピストル弾", slug: "ammo.pistol", category: "Ammo" },
         { name: "高速矢", slug: "arrow.hv", category: "Ammo" },
         { name: "火の矢", slug: "arrow.fire", category: "Ammo" },
@@ -73,9 +65,24 @@
         { name: "放射線ダート", slug: "dart.radiation", category: "Ammo" },
         { name: "インキャパシティトダート", slug: "dart.incapacitate", category: "Ammo" },
         { name: "スピアガンの槍", slug: "speargun.spear", category: "Ammo" },
-        { name: "Salvaged Sword", slug: "sword.salvaged", category: "Weapons" },
         { name: "ツルハシ", slug: "pickaxe", category: "Tools" },
-        { name: "Road Sign Jacket", slug: "roadsign.jacket", category: "Armor" },
+        { name: "金属探知機", slug: "metal.detector", category: "Tools" },
+        { name: "フレア", slug: "flare", category: "Tools" },
+        { name: "梱包爆薬", slug: "explosive.satchel", category: "Tools" },
+        { name: "暴徒鎮圧用ヘルメット", slug: "riot.helmet", category: "Armor" },
+        { name: "バケツヘルメット", slug: "bucket.helmet", category: "Armor" },
+        { name: "囚人フード", slug: "prisonerhood", category: "Armor" },
+        { name: "鉱夫向けの帽子", slug: "hat.miner", category: "Armor" },
+        { name: "ジャケット", slug: "jacket", category: "Armor" },
+        { name: "Tシャツ", slug: "tshirt", category: "Armor" },
+        { name: "長袖のTシャツ", slug: "tshirt.long", category: "Armor" },
+        { name: "シャツ", slug: "shirt.collared", category: "Armor" },
+        { name: "スノージャケット", slug: "jacket.snow", category: "Armor" },
+        { name: "ズボン", slug: "pants", category: "Armor" },
+        { name: "木のアーマーインサート", slug: "clothing.mod.armorinsert_wood", category: "Armor" },
+        { name: "小さいバックパック", slug: "smallbackpack", category: "Armor" },
+        { name: "強化木の盾", slug: "reinforced.wooden.shield", category: "Armor" },
+        { name: "木製の馬の鎧", slug: "horse.armor.wood", category: "Armor" },
         { name: "ガレージドア", slug: "wall.frame.garagedoor", category: "Building" },
         { name: "金属の窓格子", slug: "wall.window.bars.metal", category: "Building" },
         { name: "Floor Grill", slug: "floor.grill", category: "Building" },
@@ -83,8 +90,24 @@
         { name: "Small Furnace", slug: "furnace", category: "Other" },
         { name: "ショットガントラップ", slug: "guntrap", category: "Traps" },
         { name: "Snap Trap", slug: "trap.bear", category: "Traps" },
+        { name: "手作りのホロサイト", slug: "weapon.mod.simplesight", category: "Attachments" },
+        { name: "ソーダ缶サイレンサー", slug: "weapon.mod.sodacansilencer", category: "Attachments" },
+        { name: "フラッシュライト", slug: "weapon.mod.flashlight", category: "Attachments" },
         { name: "リペアベンチ", slug: "box.repair.bench", category: "Other" },
         { name: "リサーチテーブル", slug: "research.table", category: "Other" },
+        { name: "豆缶グレネード", slug: "grenade.beancan", category: "OtherWeapons" },
+        { name: "ハチグレネード", slug: "grenade.bee", category: "OtherWeapons" },
+        { name: "強化弓", slug: "bow.compound", category: "OtherWeapons" },
+        { name: "ボウガン", slug: "crossbow", category: "OtherWeapons" },
+        { name: "吹き矢", slug: "blowpipe", category: "OtherWeapons" },
+        { name: "4連クロスボウ", slug: "minicrossbow", category: "OtherWeapons" },
+        { name: "スピアガン", slug: "speargun", category: "OtherWeapons" },
+        { name: "パドル", slug: "paddle", category: "OtherWeapons" },
+        { name: "メイス", slug: "mace", category: "OtherWeapons" },
+        { name: "廃材の包丁", slug: "salvaged.cleaver", category: "OtherWeapons" },
+        { name: "廃材の剣", slug: "salvaged.sword", category: "OtherWeapons" },
+        { name: "コンバットナイフ", slug: "knife.combat", category: "OtherWeapons" },
+        { name: "攻城塔", slug: "siegetower", category: "OtherWeapons" },
         { name: "ミキシングテーブル", slug: "mixingtable", category: "Other" }
       ],
       2: [
@@ -99,16 +122,13 @@
         { name: "マグナムリボルバー", slug: "pistol.python", category: "Weapons" },
         { name: "火炎放射器", slug: "flamethrower", category: "OtherWeapons" },
         { name: "5.56mmライフル弾", slug: "ammo.rifle", category: "Ammo" },
-        { name: "Road Sign Kilt", slug: "roadsign.kilt", category: "Armor" },
-        { name: "メタルフェースマスク", slug: "metal.facemask", category: "Armor" },
+        { name: "道路標識の前垂れ", slug: "roadsign.kilt", category: "Armor" },
+        { name: "道路標識のジャケット", slug: "roadsign.jacket", category: "Armor" },
         { name: "Large Furnace", slug: "furnace.large", category: "Other" },
         { name: "Auto Turret", slug: "autoturret", category: "Traps" },
         { name: "Sheet Metal Door", slug: "door.hinged.metal", category: "Building" },
         { name: "Flame Turret", slug: "flameturret", category: "Traps" },
-        { name: "サムサイト", slug: "samsite", category: "Traps" },
-        { name: "ホロサイト", slug: "weapon.mod.holosight", category: "Attachments" },
-        { name: "マズルブレーキ", slug: "weapon.mod.muzzlebrake", category: "Attachments" },
-        { name: "拡張マガジン", slug: "weapon.mod.extendedmags", category: "Attachments" }
+        { name: "サムサイト", slug: "samsite", category: "Traps" }
       ],
       3: [
         { name: "SKS", slug: "rifle.sks", category: "Weapons" },
@@ -119,13 +139,9 @@
         { name: "ボルトアクションライフル", slug: "rifle.bolt", category: "Weapons" },
         { name: "L96 Sniper", slug: "rifle.l96", category: "Weapons" },
         { name: "ロケットランチャー", slug: "rocket.launcher", category: "OtherWeapons" },
-        { name: "ロケット弾", slug: "ammo.rocket.basic", category: "Ammo" },
         { name: "C4", slug: "explosive.timed", category: "OtherWeapons" },
         { name: "Armored Door", slug: "door.hinged.tough", category: "Building" },
-        { name: "Heavy Plate Chest", slug: "heavy.plate.chest", category: "Armor" },
-        { name: "8倍スコープ", slug: "weapon.mod.small.scope", category: "Attachments" },
-        { name: "レーザーサイト", slug: "weapon.mod.lasersight", category: "Attachments" },
-        { name: "Explosives", slug: "explosives", category: "Other" }
+        { name: "Heavy Plate Chest", slug: "heavy.plate.chest", category: "Armor" }
       ]
     };
 
@@ -140,7 +156,6 @@
       "Building": "建築", "Traps": "トラップ", "Attachments": "アタッチメント", "Other": "その他"
     };
 
-    // ここから下は共有機能付きのコード（前回と同じ）
     function saveData() {
       localStorage.setItem('rustPlayers', JSON.stringify(players));
       localStorage.setItem('rustChecked', JSON.stringify(checkedData));
@@ -164,7 +179,9 @@
     function deletePlayer(name) {
       if (!confirm(`${name} を削除しますか？`)) return;
       players = players.filter(p => p !== name);
-      Object.keys(checkedData).forEach(item => checkedData[item] = checkedData[item].filter(p => p !== name));
+      Object.keys(checkedData).forEach(item => {
+        checkedData[item] = checkedData[item].filter(p => p !== name);
+      });
       renderPlayers();
       renderCurrentTab();
       saveData();
@@ -253,9 +270,14 @@
       renderCurrentTab();
     }
 
-    function exportData() { /* 省略 */ alert("エクスポート機能は後で追加します"); }
-    function importData() { /* 省略 */ alert("インポート機能は後で追加します"); }
-    function copyShareLink() { /* 省略 */ alert("共有リンク機能は後で追加します"); }
+    function copyShareLink() {
+      const data = { players, checkedData };
+      const compressed = btoa(encodeURIComponent(JSON.stringify(data)));
+      const url = window.location.origin + window.location.pathname + "?data=" + compressed;
+      navigator.clipboard.writeText(url).then(() => {
+        alert("✅ 共有リンクをコピーしました！\nこのリンクをチームメンバーに送ってください。");
+      });
+    }
 
     function init() {
       renderPlayers();
