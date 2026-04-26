@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rust Tech Tree クラフト共有ツール</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
+    .item-card {
+      background: #1e2937;
+      border: 3px solid #334155;
+      transition: all 0.3s;
+    }
+    .item-card:hover {
+      border-color: #f97316;
+      transform: translateY(-4px);
+      box-shadow: 0 0 25px rgba(249, 115, 22, 0.4);
+    }
+    .item-img { width: 90px; height: 90px; object-fit: contain; image-rendering: crisp-edges; }
+    .tab-active { background-color: #1e2937; border-bottom: 5px solid #f97316; font-weight: 700; }
+    .player-tag { background: #10b981; padding: 2px 10px; border-radius: 9999px; font-size: 0.75rem; }
+    .category-btn {
+      transition: all 0.2s;
+    }
+    .category-btn.active {
+      background-color: #f97316;
+      color: black;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div class="max-w-7xl mx-auto p-6">
+    <h1 class="text-4xl font-bold text-orange-500 mb-2 flex items-center gap-4">
+      ⚒️ Rust Tech Tree Tracker
+    </h1>
+    <p class="text-zinc-400 mb-8">全アイテム・カテゴリー別フィルタ（カテゴリ順ソート済み）</p>
+
+    <!-- プレイヤー管理 -->
+    <div class="bg-zinc-900 rounded-2xl p-6 mb-8 border border-zinc-700">
+      <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">👥 プレイヤーリスト</h2>
+      <div class="flex gap-3 mb-4">
+        <input id="newPlayer" class="flex-1 bg-zinc-800 border border-zinc-600 rounded-xl px-5 py-3 text-white placeholder:text-zinc-500 focus:border-orange-500" placeholder="名前を入力 (例: shuu)" type="text">
+        <button onclick="addPlayer()" class="bg-orange-600 hover:bg-orange-500 px-10 py-3 rounded-xl font-medium">追加</button>
+      </div>
+      <div id="playersContainer" class="flex flex-wrap gap-3"></div>
+    </div>
+
+    <!-- タブ -->
+    <div class="flex border-b border-zinc-700 mb-6 bg-zinc-900 rounded-t-3xl overflow-hidden">
+      <button onclick="switchTab(1)" id="tab1" class="tab-active flex-1 py-5 text-xl">WORKBENCH LEVEL 1</button>
+      <button onclick="switchTab(2)" id="tab2" class="flex-1 py-5 text-xl">LEVEL 2</button>
+      <button onclick="switchTab(3)" id="tab3" class="flex-1 py-5 text-xl">LEVEL 3</button>
+    </div>
+
+    <!-- カテゴリーフィルタ -->
+    <div id="categoryFilter" class="flex flex-wrap gap-2 mb-8"></div>
+
+    <div id="content" class="bg-zinc-900 border border-t-0 border-zinc-700 rounded-b-3xl p-8"></div>
+  </div>
+
+  <script>
+    const workbenchesData = {
+      1: [
+        // Weapons
+        { name: "Crossbow", slug: "crossbow", category: "Weapons" },
+        { name: "リボルバー", slug: "pistol.revolver", category: "Weapons" },
+        { name: "ネイルガン", slug: "pistol.nailgun", category: "Weapons" },
+        { name: "ハンドメイドSMG", slug: "smg.2", category: "Weapons" },
+        { name: "水道管のショットガン", slug: "shotgun.waterpipe", category: "Weapons" },
+        { name: "ダブルバレルショットガン", slug: "shotgun.doublebarrel", category: "Weapons" },
+        // OtherWeapons
+        { name: "豆缶グレネード", slug: "grenade.beancan", category: "OtherWeapons" },
+        { name: "ハチグレネード", slug: "grenade.bee", category: "OtherWeapons" },
+        { name: "強化弓", slug: "bow.compound", category: "OtherWeapons" },
+        { name: "ボウガン", slug: "crossbow", category: "OtherWeapons" },
+        { name: "吹き矢", slug: "blowpipe", category: "OtherWeapons" },
+        { name: "4連クロスボウ", slug: "minicrossbow", category: "OtherWeapons" },
+        { name: "スピアガン", slug: "speargun", category: "OtherWeapons" },
+        { name: "パドル", slug: "paddle", category: "OtherWeapons" },
+        { name: "メイス", slug: "mace", category: "OtherWeapons" },
+        { name: "廃材の包丁", slug: "salvaged.cleaver", category: "OtherWeapons" },
+        { name: "廃材の剣", slug: "salvaged.sword", category: "OtherWeapons" },
+        { name: "コンバットナイフ", slug: "knife.combat", category: "OtherWeapons" },
+        { name: "攻城塔", slug: "siegetower", category: "OtherWeapons" },
+        // Ammo
+        { name: "ピストル弾", slug: "ammo.pistol", category: "Ammo" },
+        { name: "高速矢", slug: "arrow.hv", category: "Ammo" },
+        { name: "火の矢", slug: "arrow.fire", category: "Ammo" },
+        { name: "木のダート", slug: "dart.wood", category: "Ammo" },
+        { name: "スキャッターダート", slug: "dart.scatter", category: "Ammo" },
+        { name: "放射線ダート", slug: "dart.radiation", category: "Ammo" },
+        { name: "インキャパシティトダート", slug: "dart.incapacitate", category: "Ammo" },
+        { name: "スピアガンの槍", slug: "speargun.spear", category: "Ammo" },
+        // Armor
+        { name: "Metal Chestplate", slug: "metal.chestplate", category: "Armor" },
+        { name: "暴徒鎮圧用ヘルメット", slug: "riot.helmet", category: "Armor" },
+        { name: "バケツヘルメット", slug: "bucket.helmet", category: "Armor" },
+        { name: "囚人フード", slug: "prisonerhood", category: "Armor" },
+        { name: "鉱夫向けの帽子", slug: "hat.miner", category: "Armor" },
+        { name: "ジャケット", slug: "jacket", category: "Armor" },
+        { name: "Tシャツ", slug: "tshirt", category: "Armor" },
+        { name: "長袖のTシャツ", slug: "tshirt.long", category: "Armor" },
+        { name: "シャツ", slug: "shirt.collared", category: "Armor" },
+        { name: "スノージャケット", slug: "jacket.snow", category: "Armor" },
+        { name: "ズボン", slug: "pants", category: "Armor" },
+        { name: "木のアーマーインサート", slug: "clothing.mod.armorinsert_wood", category: "Armor" },
+        { name: "小さいバックパック", slug: "smallbackpack", category: "Armor" },
+        { name: "強化木の盾", slug: "reinforced.wooden.shield", category: "Armor" },
+        { name: "木製の馬の鎧", slug: "horse.armor.wood", category: "Armor" },
+        // Tools
+        { name: "廃材のハンマー", slug: "hammer.salvaged", category: "Tools" },
+        { name: "鉄の斧", slug: "hatchet", category: "Tools" },
+        { name: "ツルハシ", slug: "pickaxe", category: "Tools" },
+        { name: "金属探知機", slug: "metal.detector", category: "Tools" },
+        { name: "フレア", slug: "flare", category: "Tools" },
+        { name: "梱包爆薬", slug: "explosive.satchel", category: "Tools" },
+        // Building
+        { name: "ガレージドア", slug: "wall.frame.garagedoor", category: "Building" },
+        { name: "金属の窓格子", slug: "wall.window.bars.metal", category: "Building" },
+        { name: "Floor Grill", slug: "floor.grill", category: "Building" },
+        { name: "コードロック", slug: "lock.code", category: "Building" },
+        // Traps
+        { name: "ショットガントラップ", slug: "guntrap", category: "Traps" },
+        { name: "Snap Trap", slug: "trap.bear", category: "Traps" },
+        // Attachments
+        { name: "手作りのホロサイト", slug: "weapon.mod.simplesight", category: "Attachments" },
+        { name: "ソーダ缶サイレンサー", slug: "weapon.mod.sodacansilencer", category: "Attachments" },
+        { name: "フラッシュライト", slug: "weapon.mod.flashlight", category: "Attachments" },
+        // Other
+        { name: "Bucket", slug: "bucket.water", category: "Other" },
+        { name: "Small Furnace", slug: "furnace", category: "Other" },
+        { name: "リペアベンチ", slug: "box.repair.bench", category: "Other" },
+        { name: "リサーチテーブル", slug: "research.table", category: "Other" },
+        { name: "ミキシングテーブル", slug: "mixingtable", category: "Other" }
+      ],
+      2: [
+        // Weapons
+        { name: "トンプソン", slug: "smg.thompson", category: "Weapons" },
+        { name: "セミオートライフル", slug: "rifle.semiauto", category: "Weapons" },
+        { name: "カスタムSMG", slug: "smg.2", category: "Weapons" },
+        { name: "ポンプアクション式ショットガン", slug: "shotgun.pump", category: "Weapons" },
+        { name: "M249", slug: "lmg.m249", category: "Weapons" },
+        { name: "セミオートピストル", slug: "pistol.semiauto", category: "Weapons" },
+        { name: "マグナムリボルバー", slug: "pistol.python", category: "Weapons" },
+        // OtherWeapons
+        { name: "ロケットランチャー", slug: "rocket.launcher", category: "OtherWeapons" },
+        { name: "ホーミングミサイルランチャー", slug: "homingmissile.launcher", category: "OtherWeapons" },
+        { name: "火炎放射器", slug: "flamethrower", category: "OtherWeapons" },
+        { name: "F1グレネード", slug: "grenade.f1", category: "OtherWeapons" },
+        { name: "火炎瓶", slug: "grenade.molotov", category: "OtherWeapons" },
+        { name: "フラッシュバン", slug: "grenade.flashbang", category: "OtherWeapons" },
+        { name: "ロングソード", slug: "longsword", category: "OtherWeapons" },
+        { name: "バリスタ", slug: "ballista.static", category: "OtherWeapons" },
+        { name: "固定バリスタ", slug: "ballista.mounted", category: "OtherWeapons" },
+        { name: "カタパルト", slug: "catapult", category: "OtherWeapons" },
+        { name: "バタリングラム", slug: "batteringram", category: "OtherWeapons" },
+        // Ammo
+        { name: "5.56mmライフル弾", slug: "ammo.rifle", category: "Ammo" },
+        { name: "ピストル弾(高速)", slug: "ammo.pistol.hv", category: "Ammo" },
+        { name: "ピストル弾(焼夷)", slug: "ammo.pistol.fire", category: "Ammo" },
+        { name: "ロケット弾(高速)", slug: "ammo.rocket.hv", category: "Ammo" },
+        { name: "ロケット弾(焼夷)", slug: "ammo.rocket.fire", category: "Ammo" },
+        { name: "地対空ミサイル弾", slug: "ammo.rocket.sam", category: "Ammo" },
+        { name: "ホーミングミサイル", slug: "ammo.rocket.seeker", category: "Ammo" },
+        { name: "12ゲージ散弾", slug: "ammo.shotgun", category: "Ammo" },
+        { name: "12ゲージスラグ弾", slug: "ammo.shotgun.slug", category: "Ammo" },
+        { name: "12ゲージ焼夷弾", slug: "ammo.shotgun.fire", category: "Ammo" },
+        { name: "魚雷", slug: "submarine.torpedo.straight", category: "Ammo" },
+        // Armor
+        { name: "道路標識の前垂れ", slug: "roadsign.kilt", category: "Armor" },
+        { name: "道路標識のジャケット", slug: "roadsign.jacket", category: "Armor" },
+        { name: "重装ヘルメット", slug: "heavy.plate.helmet", category: "Armor" },
+        { name: "コーヒー缶ヘルメット", slug: "coffeecan.helmet", category: "Armor" },
+        { name: "暗視ゴーグル", slug: "nightvisiongoggles", category: "Armor" },
+        { name: "重装ジャケット", slug: "heavy.plate.jacket", category: "Armor" },
+        { name: "パーカー", slug: "hoodie", category: "Armor" },
+        { name: "道路標識の手袋", slug: "roadsign.gloves", category: "Armor" },
+        { name: "重装パンツ", slug: "heavy.plate.pants", category: "Armor" },
+        { name: "ブーツ", slug: "shoes.boots", category: "Armor" },
+        { name: "アスベストのアーマーインサート", slug: "clothing.mod.armorinsert_asbestos", category: "Armor" },
+        { name: "鉛のアーマーインサート", slug: "clothing.mod.armorinsert_metal", category: "Armor" },
+        { name: "ハズマットスーツ", slug: "hazmatsuit", category: "Armor" },
+        { name: "パラシュート", slug: "parachute", category: "Armor" },
+        { name: "鉄の盾", slug: "metal.shield", category: "Armor" },
+        { name: "道路標識の馬の鎧", slug: "horse.armor.roadsign", category: "Armor" },
+        { name: "上質な馬の靴", slug: "horse.shoes.advanced", category: "Armor" },
+        // Tools
+        { name: "廃材の斧", slug: "axe.salvaged", category: "Tools" },
+        { name: "廃材のアイスピック", slug: "icepick.salvaged", category: "Tools" },
+        { name: "チェーンソー", slug: "chainsaw", category: "Tools" },
+        { name: "スモークグレネード", slug: "grenade.smoke", category: "Tools" },
+        { name: "手錠", slug: "handcuffs", category: "Tools" },
+        { name: "携帯型無線発信機", slug: "rf.detonator", category: "Tools" },
+        // Building
+        { name: "Sheet Metal Door", slug: "door.hinged.metal", category: "Building" },
+        // Traps
+        { name: "Auto Turret", slug: "autoturret", category: "Traps" },
+        { name: "Flame Turret", slug: "flameturret", category: "Traps" },
+        { name: "サムサイト", slug: "samsite", category: "Traps" },
+        // Attachments
+        { name: "ホロサイト", slug: "weapon.mod.holosight", category: "Attachments" },
+        { name: "オイルフィルターサイレンサー", slug: "weapon.mod.oilfiltersilencer", category: "Attachments" },
+        { name: "マズルブースト", slug: "weapon.mod.muzzleboost", category: "Attachments" },
+        { name: "マズルブレーキ", slug: "weapon.mod.muzzlebrake", category: "Attachments" },
+        { name: "拡張マガジン", slug: "weapon.mod.extendedmags", category: "Attachments" },
+        // Other
+        { name: "Large Furnace", slug: "furnace.large", category: "Other" }
+      ],
+      3: [
+        // Weapons
+        { name: "SKS", slug: "rifle.sks", category: "Weapons" },
+        { name: "HMLMG", slug: "hmlmg", category: "Weapons" },
+        { name: "アサルトライフル", slug: "rifle.ak", category: "Weapons" },
+        { name: "MP5A4", slug: "smg.mp5", category: "Weapons" },
+        { name: "LR-300", slug: "rifle.lr300", category: "Weapons" },
+        { name: "ボルトアクションライフル", slug: "rifle.bolt", category: "Weapons" },
+        { name: "L96 Sniper", slug: "rifle.l96", category: "Weapons" },
+        // OtherWeapons
+        { name: "ロケットランチャー", slug: "rocket.launcher", category: "OtherWeapons" },
+        { name: "C4", slug: "explosive.timed", category: "OtherWeapons" },
+        // Ammo
+        { name: "ロケット弾", slug: "ammo.rocket.basic", category: "Ammo" },
+        { name: "5.56mmライフル弾(高速)", slug: "ammo.rifle.hv", category: "Ammo" },
+        { name: "5.56mmライフル弾(焼夷)", slug: "ammo.rifle.incendiary", category: "Ammo" },
+        { name: "5.56mmライフル弾(炸裂)", slug: "ammo.rifle.explosive", category: "Ammo" },
+        // Armor
+        { name: "金属の胸当て", slug: "metal.plate.torso", category: "Armor" },
+        { name: "メタルフェースマスク", slug: "metal.facemask", category: "Armor" },
+        // Building
+        { name: "Armored Door", slug: "door.hinged.tough", category: "Building" },
+        // Attachments
+        { name: "8倍スコープ", slug: "weapon.mod.small.scope", category: "Attachments" },
+        { name: "レーザーサイト", slug: "weapon.mod.lasersight", category: "Attachments" },
+        // Other
+        { name: "Explosives", slug: "explosives", category: "Other" }
+      ]
+    };
+
+    let players = JSON.parse(localStorage.getItem('rustPlayers')) || [];
+    let checkedData = JSON.parse(localStorage.getItem('rustChecked')) || {};
+    let currentTab = 1;
+    let currentCategory = "All";
+
+    const categoryLabels = {
+      "All": "すべて",
+      "Weapons": "武器",
+      "OtherWeapons": "その他の武器",
+      "Ammo": "弾",
+      "Armor": "装備",
+      "Tools": "ツール",
+      "Building": "建築",
+      "Traps": "トラップ",
+      "Attachments": "アタッチメント",
+      "Other": "その他"
+    };
+
+    function saveData() {
+      localStorage.setItem('rustPlayers', JSON.stringify(players));
+      localStorage.setItem('rustChecked', JSON.stringify(checkedData));
+    }
+
+    function getImageUrl(slug) {
+      return `https://rustlabs.com/img/items180/${slug}.png`;
+    }
+
+    function addPlayer() {
+      const input = document.getElementById('newPlayer');
+      const name = input.value.trim();
+      if (!name || players.includes(name)) return;
+      players.push(name);
+      input.value = '';
+      renderPlayers();
+      renderCurrentTab();
+      saveData();
+    }
+
+    function deletePlayer(name) {
+      if (!confirm(`${name} を削除しますか？`)) return;
+      players = players.filter(p => p !== name);
+      Object.keys(checkedData).forEach(item => {
+        checkedData[item] = checkedData[item].filter(p => p !== name);
+      });
+      renderPlayers();
+      renderCurrentTab();
+      saveData();
+    }
+
+    function renderPlayers() {
+      const container = document.getElementById('playersContainer');
+      container.innerHTML = players.map(name => `
+        <div class="bg-zinc-800 border border-zinc-600 rounded-2xl px-5 py-2 flex items-center gap-3 text-sm">
+          <span>${name}</span>
+          <button onclick="deletePlayer('${name}')" class="ml-auto text-red-400 hover:text-red-500 text-2xl leading-none">×</button>
+        </div>
+      `).join('');
+    }
+
+    function toggleCheck(itemName, playerName) {
+      if (!checkedData[itemName]) checkedData[itemName] = [];
+      const arr = checkedData[itemName];
+      arr.includes(playerName) ? arr.splice(arr.indexOf(playerName), 1) : arr.push(playerName);
+      saveData();
+      renderCurrentTab();
+    }
+
+    function renderCategoryFilter() {
+      const container = document.getElementById('categoryFilter');
+      const cats = Object.keys(categoryLabels);
+      container.innerHTML = cats.map(cat => `
+        <button onclick="filterCategory('${cat}')" 
+                class="category-btn px-6 py-3 rounded-2xl text-sm border border-zinc-600 hover:border-orange-500 ${currentCategory === cat ? 'active' : ''}">
+          ${categoryLabels[cat]}
+        </button>
+      `).join('');
+    }
+
+    function filterCategory(cat) {
+      currentCategory = cat;
+      renderCategoryFilter();
+      renderCurrentTab();
+    }
+
+    function renderCurrentTab() {
+      const container = document.getElementById('content');
+      let items = [...(workbenchesData[currentTab] || [])];
+
+      if (currentCategory !== "All") {
+        items = items.filter(item => item.category === currentCategory);
+      }
+
+      let html = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">`;
+
+      items.forEach(item => {
+        const checkedPlayers = checkedData[item.name] || [];
+        const checksHTML = players.map(p => `
+          <label class="flex items-center gap-2 text-sm cursor-pointer hover:bg-zinc-800 p-1 rounded">
+            <input type="checkbox" ${checkedPlayers.includes(p) ? 'checked' : ''} 
+                   onchange="toggleCheck('${item.name}', '${p}')" class="accent-orange-500 w-4 h-4">
+            <span>${p}</span>
+          </label>
+        `).join('');
+
+        const tagsHTML = checkedPlayers.length ? 
+          `<div class="flex flex-wrap gap-2 mt-4">${checkedPlayers.map(p => `<span class="player-tag">${p}</span>`).join('')}</div>` : 
+          `<p class="text-zinc-500 text-sm mt-4">まだ誰もチェックされていません</p>`;
+
+        html += `
+          <div class="item-card rounded-3xl p-6 text-center">
+            <img src="${getImageUrl(item.slug)}" alt="${item.name}" class="item-img mx-auto mb-4 bg-zinc-950 rounded-2xl p-3" onerror="this.style.display='none'">
+            <h3 class="font-bold text-lg mb-2">${item.name}</h3>
+            <div class="text-xs text-orange-400 mb-4">${categoryLabels[item.category] || item.category}</div>
+            <div class="bg-zinc-950 rounded-2xl p-4 text-left text-xs mb-5">${checksHTML}</div>
+            <div class="text-emerald-400 text-sm font-medium">✅ 作れる人</div>
+            ${tagsHTML}
+          </div>
+        `;
+      });
+
+      if (items.length === 0) {
+        html += `<p class="col-span-full text-center py-20 text-zinc-500">このカテゴリーのアイテムはまだありません</p>`;
+      }
+
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    function switchTab(level) {
+      currentTab = level;
+      document.getElementById('tab1').classList.toggle('tab-active', level === 1);
+      document.getElementById('tab2').classList.toggle('tab-active', level === 2);
+      document.getElementById('tab3').classList.toggle('tab-active', level === 3);
+      renderCurrentTab();
+    }
+
+    function init() {
+      renderPlayers();
+      renderCategoryFilter();
+      switchTab(1);
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
